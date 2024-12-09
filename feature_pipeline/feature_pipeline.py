@@ -12,10 +12,8 @@ from dotenv import load_dotenv
 import numpy as np
 from loguru import logger
 
-# Load environment variables
 load_dotenv()
 
-# Configure logger
 logger.add("feature_pipeline.log", rotation="500 MB")
 
 class ContentType(str, Enum):
@@ -34,7 +32,6 @@ class ProcessedChunk:
     
 class ContentClassifier:
     def classify_content(self, text: str) -> ContentType:
-        # Comprehensive content classification
         code_indicators = [
             "def ", "class ", "import ", "from ", "return",
             "{", "}", "//", "/", "public ", "private ",
@@ -55,24 +52,21 @@ class ContentClassifier:
             "professional", "job title", "work history"
         ]
         
-        # Count occurrences of indicators
         code_score = sum(1 for indicator in code_indicators if indicator in text.lower())
         article_score = sum(1 for indicator in article_indicators if indicator in text.lower())
         profile_score = sum(1 for indicator in profile_indicators if indicator in text.lower())
         
-        # Additional code detection: check for indentation patterns
         lines = text.split('\n')
         indentation_pattern = sum(1 for line in lines if line.startswith('    ') or line.startswith('\t'))
         code_score += indentation_pattern * 0.5
         
-        # Classify based on scores
         if code_score > article_score * 2 and code_score > profile_score:
             return ContentType.CODE
         elif profile_score > code_score and profile_score > article_score:
             return ContentType.PROFILE
         elif article_score > code_score and article_score > profile_score:
             return ContentType.ARTICLE
-        elif len(text.split()) > 20:  # If it's a substantial text but not code/article/profile
+        elif len(text.split()) > 20: 
             return ContentType.POST
         else:
             return ContentType.UNKNOWN
@@ -106,7 +100,6 @@ class MongoDBHandler:
     def update_document_status(self, doc_id: str, processed_data_file: str):
         """Update document status and store processed data reference."""
         try:
-            # Create a minimal update to avoid size limitations
             update_data = {
                 "processed": True,
                 "processed_at": datetime.utcnow(),
@@ -144,9 +137,8 @@ class ChunkProcessor:
     
     @staticmethod
     def _clean_text(text: str) -> str:
-        # Comprehensive text cleaning
         text = str(text).strip()
-        text = ' '.join(text.split())  # Remove multiple spaces
+        text = ' '.join(text.split()) 
         return text
 
 class FeaturePipeline:
@@ -162,7 +154,6 @@ class FeaturePipeline:
         self.output_dir = output_dir
         os.makedirs(output_dir, exist_ok=True)
         
-        # Establish MongoDB connection
         self.client = MongoClient(mongo_uri)
         
     def _generate_file_name(self, doc_id: str, source: str) -> str:
@@ -178,7 +169,6 @@ class FeaturePipeline:
         for chunk in original_chunks:
             content = chunk.get("content", "")
             
-            # If chunk is too large, split it
             if len(content) > max_chunk_size:
                 for i in range(0, len(content), max_chunk_size):
                     new_chunks.append({
@@ -205,7 +195,6 @@ class FeaturePipeline:
             
             logger.info(f"Processing source: {source_name}")
             
-            # Initialize MongoDB handler for this source
             mongodb = MongoDBHandler(
                 uri=source_config['mongo_uri'], 
                 db_name=db_name, 
@@ -214,7 +203,6 @@ class FeaturePipeline:
             
             processor = ChunkProcessor()
             
-            # Get unprocessed documents for this source
             documents = mongodb.get_unprocessed_documents(max_documents_per_source)
             logger.info(f"Found {len(documents)} unprocessed documents in {source_name}")
             
@@ -226,28 +214,22 @@ class FeaturePipeline:
                     logger.info(f"Processing batch {i // batch_size + 1} for {source_name}")
                 
                 try:
-                    # Log document size
                     doc_size = len(json.dumps(doc))
                     logger.info(f"Document {doc['_id']} from {source_name} size: {doc_size} bytes")
                     
-                    # Split large documents
                     doc = self._split_large_document(doc, max_chunk_size)
                     
-                    # Process document with source-specific metadata
                     processed_data = self._process_single_document(
                         document=doc, 
                         processor=processor, 
                         source_name=source_name
                     )
                     
-                    # Generate unique filename
                     output_filename = self._generate_file_name(doc['_id'], source_name)
                     output_filepath = os.path.join(self.output_dir, output_filename)
                     
-                    # Save processed data
                     self._save_processed_data(output_filepath, processed_data)
                     
-                    # Update document status
                     mongodb.update_document_status(doc['_id'], output_filename)
                     
                     processed_count += 1
@@ -313,11 +295,9 @@ class FeaturePipeline:
             logger.error(f"Error saving processed data to {filepath}: {e}")
 
 def main():
-    # Configuration - Read from environment variables or config file
     MONGO_URI = os.getenv("BASE_MONGO_URI", "mongodb://localhost:27017/")
     OUTPUT_DIR = os.getenv("OUTPUT_DIR", "processed_data")
     
-    # Source configurations
     SOURCE_CONFIGURATIONS = [
         {
             "mongo_uri": MONGO_URI,
@@ -339,7 +319,6 @@ def main():
         }
     ]
     
-    # Logging configuration
     logger.info("Multi-Source Feature Pipeline Starting...")
     
     try:
@@ -352,9 +331,9 @@ def main():
         
         # Process documents from all sources
         pipeline.process_all_sources(
-            batch_size=10,           # Adjust based on system capacity
-            max_chunk_size=10000,    # Adjust chunk size as needed
-            max_documents_per_source=100  # Limit documents per source
+            batch_size=10,           
+            max_chunk_size=10000,   
+            max_documents_per_source=100  
         )
         
         logger.success("Multi-Source Feature Pipeline Completed Successfully")
