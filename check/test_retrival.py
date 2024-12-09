@@ -1,9 +1,6 @@
-# test_retrieval.py
-
 from retrieval import retrieve_relevant_qna
 import logging
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
