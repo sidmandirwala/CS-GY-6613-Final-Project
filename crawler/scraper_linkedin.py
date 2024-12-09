@@ -7,15 +7,13 @@ from pymongo import MongoClient, errors
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service  # Updated import
+from selenium.webdriver.chrome.service import Service  
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager  # To manage ChromeDriver
+from webdriver_manager.chrome import ChromeDriverManager 
 
-# Configure Loguru
-logger.add("linkedin_scraper.log", rotation="1 MB")  # Logs to a file with rotation
+logger.add("linkedin_scraper.log", rotation="1 MB") 
 
-# MongoDB Configuration
 MONGO_URI = "mongodb://localhost:27017/"
 DATABASE_NAME = "linkedin_scraper"
 COLLECTION_NAME = "profiles"
@@ -40,30 +38,26 @@ class LinkedInCrawler:
         """Initializes the Selenium WebDriver using ChromeDriverManager."""
         options = Options()
         if self._headless:
-            options.add_argument("--headless=new")  # Updated headless argument for newer Chrome
+            options.add_argument("--headless=new")  
         options.add_argument("--disable-gpu")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--window-size=1920,1080")
         options.add_argument("--disable-blink-features=AutomationControlled")
-        # Set a realistic user-agent
         options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                              "AppleWebKit/537.36 (KHTML, like Gecko) "
                              "Chrome/115.0.0.0 Safari/537.36")
         
-        # Initialize the Service object
         service = Service(ChromeDriverManager().install())
         
-        # Initialize the WebDriver with the Service object
         driver = webdriver.Chrome(service=service, options=options)
         driver.maximize_window()
         return driver
 
     def login(self) -> None:
         """Logs into LinkedIn."""
-        # Hardcoded credentials (⚠️ Not recommended for production use)
-        username = "prathamsaraf008@gmail.com"  # Replace with your LinkedIn username
-        password = "AI_Test"  # Replace with your LinkedIn password
+        username = "prathamsaraf008@gmail.com"  
+        password = "AI_Test"  
 
         if not username or not password:
             raise ValueError("LinkedIn username or password is missing. Please check your hardcoded credentials.")
@@ -72,7 +66,6 @@ class LinkedInCrawler:
         self.driver.get("https://www.linkedin.com/login")
         
         try:
-            # Wait until the username field is present
             WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.ID, "username"))
             )
@@ -83,7 +76,6 @@ class LinkedInCrawler:
             logger.info("Submitting login form.")
             self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
             
-            # Wait for the home page to load by checking the presence of the profile avatar
             WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.ID, "profile-nav-item"))
             )
@@ -95,7 +87,6 @@ class LinkedInCrawler:
 
     def extract(self, link: str, user: Dict) -> None:
         """Extracts content from a LinkedIn profile and saves it to MongoDB."""
-        # Check if profile already exists
         if collection.find_one({"link": link}):
             logger.info(f"Profile already exists in the database: {link}")
             return
@@ -103,22 +94,17 @@ class LinkedInCrawler:
         logger.info(f"Starting to scrape LinkedIn profile: {link}")
 
         try:
-            # Ensure we're logged in before scraping
             self.login()
 
-            # Navigate to the profile page
             self.driver.get(link)
             
-            # Wait until the profile name is loaded
             WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "h1.text-heading-xlarge"))
             )
             logger.info("Profile page loaded successfully.")
 
-            # Scroll to load dynamic content
             self._scroll_page()
 
-            # Get profile page content
             soup = BeautifulSoup(self.driver.page_source, "html.parser")
 
             data = {
@@ -129,7 +115,6 @@ class LinkedInCrawler:
                 "Posts": self._scrape_posts(soup)
             }
 
-            # Save the scraped data to MongoDB
             profile_data = {
                 "_id": str(uuid.uuid4()),
                 "name": data["Name"],
@@ -213,8 +198,6 @@ class LinkedInCrawler:
 
     def _scrape_posts(self, soup: BeautifulSoup) -> Dict[str, Dict[str, str]]:
         """Scrapes posts from the LinkedIn profile."""
-        # Note: Scraping posts might require navigating to the 'Activity' section
-        # Here, we'll attempt to scrape recent posts if available on the profile page
 
         posts = []
         activity_section = soup.find("section", {"id": "activity-section"})
@@ -233,7 +216,6 @@ class LinkedInCrawler:
         for i in range(self._scroll_limit):
             logger.info(f"Scrolling iteration {i+1}/{self._scroll_limit}.")
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            # Wait for new content to load
             time.sleep(3)
             new_height = self.driver.execute_script("return document.body.scrollHeight")
             if new_height == last_height:
@@ -246,13 +228,10 @@ class LinkedInCrawler:
         logger.info("Closing the WebDriver.")
         self.driver.quit()
 
-# Example usage:
 if __name__ == "__main__":
-    # Replace the following credentials with your actual LinkedIn username and password
-    # WARNING: Hardcoding credentials is insecure. Use environment variables or secure storage in production.
-    crawler = LinkedInCrawler(headless=False)  # Set headless=False for debugging
+    crawler = LinkedInCrawler(headless=False)  
     test_user = {"id": str(uuid.uuid4()), "full_name": "Test User"}
-    test_link = "https://www.linkedin.com/in/sundarpichai/"  # Example LinkedIn profile
+    test_link = "https://www.linkedin.com/in/sundarpichai/" 
     
     try:
         crawler.extract(link=test_link, user=test_user)
