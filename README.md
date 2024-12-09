@@ -6,6 +6,7 @@ This project implements a Retrieval-Augmented Generation (RAG) system that crawl
 - We have used a GPT-2 small model and finetuned it on 50 Epochs because we couldnt run the larger model locally after finetuning it. The output might not be that accurate because of gpt2 being a smaller model.
 - We used Kaggle to finetune it and have attached the code for it aswell (Finetuning.ipynb). For you too retrain it, you may require the wandb key, the hugging face key is already there in the ipynb.
 - The finetuned model has been pushed to https://huggingface.co/prathamssaraf/finetuned-gpt2_50_new-peft
+- The image outputs are in the report.pdf asked in the assignment
   
 ## Prerequisites
 
