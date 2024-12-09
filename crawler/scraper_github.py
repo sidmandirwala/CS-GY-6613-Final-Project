@@ -1,5 +1,3 @@
-# scraper_github.py
-
 import os
 import shutil
 import subprocess
@@ -9,7 +7,6 @@ from typing import List, Dict
 from loguru import logger
 from pymongo import MongoClient, errors
 
-# MongoDB Configuration
 MONGO_URI = "mongodb://localhost:27017/"
 DATABASE_NAME = "github_scraper"
 COLLECTION_NAME = "repositories"
@@ -37,10 +34,8 @@ class GithubCrawler:
             # Clone the repository
             subprocess.run(["git", "clone", link], check=True, cwd=local_temp)
 
-            # Get the path of the cloned repository
             repo_path = os.path.join(local_temp, os.listdir(local_temp)[0])
 
-            # Build the content tree
             tree = {}
             for root, _, files in os.walk(repo_path):
                 rel_dir = os.path.relpath(root, repo_path)
@@ -57,7 +52,6 @@ class GithubCrawler:
                     except Exception as e:
                         logger.warning(f"Failed to read file {file_path}: {e}")
 
-            # Save the repository data to MongoDB
             repo_data = {
                 "_id": str(uuid.uuid4()),
                 "name": repo_name,
@@ -74,7 +68,6 @@ class GithubCrawler:
         except errors.PyMongoError as e:
             logger.error(f"Failed to save data to MongoDB: {e}")
         finally:
-            # Cleanup temporary directory
             shutil.rmtree(local_temp)
 
         logger.info(f"Finished scraping GitHub repository: {link}")
@@ -84,16 +77,13 @@ class GithubCrawler:
         for link in links:
             self.extract(link, user)
 
-# Example usage when imported as a module
 if __name__ == "__main__":
     crawler = GithubCrawler()
     test_user = {"id": str(uuid.uuid4()), "full_name": "Test User"}
     
-    # List of GitHub repository links to scrape
     github_links = [
         "https://github.com/ros-controls/ros2_controllers",
-        "https://github.com/ros2/ros2",
-        # "https://github.com/ros2/ros2_documentation"
+        "https://github.com/ros2/ros2"
     ]
     
     crawler.process_links(links=github_links, user=test_user)
