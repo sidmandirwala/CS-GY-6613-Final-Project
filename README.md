@@ -7,6 +7,7 @@ This project implements a Retrieval-Augmented Generation (RAG) system that crawl
 - We used Kaggle to finetune it and have attached the code for it aswell (Finetuning.ipynb). For you too retrain it, you may require the wandb key, the hugging face key is already there in the ipynb.
 - The finetuned model has been pushed to https://huggingface.co/prathamssaraf/finetuned-gpt2_50_new-peft
 - The image outputs are in the report.pdf asked in the assignment
+- Since we did not have the OpenAI key we manually used the GPT interface to form quetions from the chunked data, stored them into a csv and then pushed it to the Qdrant (VectorDB)
   
 ## Prerequisites
 
