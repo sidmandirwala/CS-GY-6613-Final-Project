@@ -13,7 +13,8 @@ This project implements a Retrieval-Augmented Generation (RAG) system that crawl
 
 ### 1. Set up Databases
 
-First, start MongoDB and Qdrant using Docker:
+First, start MongoDB and Qdrant using Docker
+This part of the code can be directly done using docker-compose.yml file or using the following commands:
 
 ```bash
 # Start MongoDB
@@ -24,7 +25,7 @@ docker run -d --name mongodb -p 27017:27017 mongo
 docker pull qdrant/qdrant
 docker run -d --name qdrant -p 6333:6333 -v qdrant-storage:/qdrant/storage qdrant/qdrant
 ```
-
+### The data collection pipeline can be directly run using start.sh script or the following commands can be executed.
 ### 2. Data Collection
 
 Run the following scrapers in separate terminals to collect data from different sources:
