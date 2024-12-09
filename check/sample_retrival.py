@@ -1,13 +1,9 @@
-# sample_retrieval.py
-
 from qdrant_client import QdrantClient
 import logging
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Configuration
 QDRANT_HOST = "localhost"
 QDRANT_PORT = 6333
 QDRANT_API_KEY = None
@@ -23,7 +19,7 @@ def retrieve_sample():
     
     try:
         # Perform a search with a dummy vector to retrieve the top 1 point
-        dummy_vector = [0.0] * 384  # Assuming vector size is 384
+        dummy_vector = [0.0] * 384  
         results = client.search(
             collection_name=COLLECTION_NAME,
             query_vector=dummy_vector,
