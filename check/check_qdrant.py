@@ -1,16 +1,12 @@
-# check_qdrant.py
-
 from qdrant_client import QdrantClient
 import logging
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Configuration
 QDRANT_HOST = "localhost"
 QDRANT_PORT = 6333
-QDRANT_API_KEY = None  # Set if applicable
+QDRANT_API_KEY = None  
 COLLECTION_NAME = "qna_collection_self"
 
 def check_qdrant_points():
@@ -21,10 +17,8 @@ def check_qdrant_points():
     )
     
     try:
-        # Get collection information
         collection_info = client.get_collection(collection_name=COLLECTION_NAME)
         
-        # Access points_count directly
         point_count = collection_info.points_count
         logger.info(f"Collection '{COLLECTION_NAME}' has {point_count} points.")
     except Exception as e:
